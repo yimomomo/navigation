@@ -27,7 +27,7 @@ from scipy.spatial.distance import cdist
 #############################################################################################
 def grid_transformation(img,transformation_matrix):
     #w, h = img.shape[0:2]
-    X = np.arange(-100,100,1)##param
+    X = np.arange(-100,100,0.5)##param
     Z = np.arange(0.00001,5,1)##param
     Y = [0.6]##param   
     grid_transform= []
@@ -75,12 +75,16 @@ def processing_segimg(seg_ind):
             else:
                 support_img[i][j] = 0
     support_img = support_img.transpose(1,0)
-    size = 11#param
+    size = 5#param
     kernel = np.ones((size,size),dtype = np.uint8)
     ##closing operation
     #img_erosion = cv2.erode(img, kernel, iterations=3) 
     #img_dilation = cv2.dilate(img,kernel,iterations=3) 
     img_close = cv2.erode(cv2.dilate(support_img, kernel), kernel)
+    img_close = cv2.erode(cv2.dilate(img_close, kernel), kernel)
+    img_close = cv2.erode(cv2.dilate(img_close, kernel), kernel)
+    img_close = cv2.erode(cv2.dilate(img_close, kernel), kernel)
+    img_close = cv2.erode(cv2.dilate(img_close, kernel), kernel)
     img_close = cv2.erode(cv2.dilate(img_close, kernel), kernel)
     img_close = cv2.erode(cv2.dilate(img_close, kernel), kernel)
     ##opening operation
@@ -89,15 +93,30 @@ def processing_segimg(seg_ind):
     img_open = cv2.dilate(cv2.erode(img_close, kernel), kernel)
     img_open = cv2.dilate(cv2.erode(img_open, kernel), kernel)
     img_open = cv2.dilate(cv2.erode(img_open, kernel), kernel)
+    img_open = cv2.dilate(cv2.erode(img_open, kernel), kernel)
+    img_open = cv2.dilate(cv2.erode(img_open, kernel), kernel)
+    img_open = cv2.dilate(cv2.erode(img_open, kernel), kernel)
+    img_open = cv2.dilate(cv2.erode(img_open, kernel), kernel)
     #support_img = np.arraay(support_img)
+
+
+
+    img_open = cv2.dilate(cv2.erode(img_open, kernel), kernel)
+    img_open = cv2.dilate(cv2.erode(img_open, kernel), kernel)
+    img_open = cv2.dilate(cv2.erode(img_open, kernel), kernel)
+    img_close = cv2.erode(cv2.dilate(img_open, kernel), kernel)
+    img_close = cv2.erode(cv2.dilate(img_close, kernel), kernel)
+    img_close = cv2.erode(cv2.dilate(img_close, kernel), kernel)
     #cv2.imshow("binarize_seg_img",support_img)
     #cv2.waitKey(100)
     #cv2.imshow("closing_seg_img",img_close)
     #cv2.waitKey(100)
     #cv2.imshow("opening_seg_img",img_open)
     #cv2.waitKey(100)
+    cv2.imshow("img_seg_process",img_close)
+    cv2.waitKey(1)
     print("process segmentation image done!!!")
-    return img_open
+    return img_close
 ###############################################################################################
 ##using hough line detection to detect the road boundary and specify the center line.
 ##on the one hand ,the boundary could let us keep distance from the boundary for safety reason
@@ -307,6 +326,20 @@ def find_road_boundary(img_open):
         current frame. 
         if the no last frame, just turn around to find if there's road boundary.
         '''
+        point_y = 210
+        row = img_gray[:,point_y]
+        index = sorted(np.where(row == 255)[0])
+        #print(index)
+        row_shape = len(index)
+        point_x = (index[0] +  index[row_shape-1])/2     
+        point1_y = 310
+        row1 = img_gray[:,point1_y]
+        index1 = sorted(np.where(row1 == 255)[0])
+        #print(index1)
+        row1_shape = len(index1)
+        point1_x = (index1[0] +  index1[row1_shape-1])/2
+        cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),1) 
+        cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),1) 
         #if(len(boundary_in_last_frame) == 0):#the first frame
         #    reference_line = []
         #else:
@@ -329,10 +362,10 @@ def find_road_boundary(img_open):
                 #cv2.line(img_open,(x1,y1),(x2,y2),(0,255,255),1)
                 k = (y2 - y1)/(x2 - x1+0.000001) 
                 b = y1*1.0 - x1*k*1.0
-                if(k<0):
+                if(k<-0.1):
                     lines_left.append([x1,y1,x2,y2,k,b])
                     #cv2.line(img_open,(x1,y1),(x2,y2),(255,0,0),1)
-                else:
+                elif(k>0.1):
                     lines_right.append([x1,y1,x2,y2,k,b])
                     #cv2.line(img_open,(x1,y1),(x2,y2),(0,255,0),1)
                 points.append([k,b])
@@ -340,8 +373,10 @@ def find_road_boundary(img_open):
         '''
         delete the line that are mis-detected
         '''
-        lines_left = sorted(lines_left)
-        lines_right = sorted(lines_right)
+        lines_left = sorted(lines_left,key=lambda x:x[4])
+        lines_right = sorted(lines_right,key=lambda x:x[4])
+        line_left = []
+        line_right = []
         #lines_left = np.array(lines_left)
         #for line in lines_left:
         if(len(lines_left) != 0):    
@@ -361,31 +396,41 @@ def find_road_boundary(img_open):
         print len(line_right)
         if((len(line_left)!=0) and (len(line_right)!=0)):  
             print("both sides detected!")    
-            line_left = lines_left[0]
-            line_right = lines_right[0]
+            #line_left = lines_left[0]
+            #line_right = lines_right[0]
             point_x = int(-(line_left[5]-line_right[5])/(line_left[4]-line_right[4]))
-            point_y = int(line_left[4]*point_x + line_left[4])
-            point1_x = 239
-            point1_y = 359
+            point_y = int(line_left[4]*point_x + line_left[5])
+            point1_y = int(point_y + 50)#parameter
+            point1_x = int(((point1_y-line_left[5])/line_left[4]+(point1_y-line_right[5])/line_right[4])/2)
             cv2.circle(img_open,(int(point_x),int(point_y)),3,(0,0,255),3)
             cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),1)  
         elif(len(line_left)!=0 and len(line_right)==0): 
+            print("left line detected!") 
             point_x = line_left[0] + 100 ##parameter
             point_y = int(line_left[1] - 100*line_left[4]) ##parameter
             point1_x = line_left[2] + 100 ##parameter
-            point2_y = int(line_left[3] - 100*line_left[4]) ##parameter
+            point1_y = int(line_left[3] - 100*line_left[4]) ##parameter
             cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),1) 
         elif(len(lines_left)==0 and len(line_right)!=0):
+            print("right line detected!") 
             point_x = line_right[0] - 100 ##parameter
             point_y = int(line_right[1] + 100*line_right[4]) ##parameter
             point1_x = line_right[2] - 100 ##parameter
-            point2_y = int(line_right[3] + 100*line_right[4]) ##parameter
-            cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),1) 
+            point1_y = int(line_right[3] + 100*line_right[4]) ##parameter
+            #cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),1) 
         else:
-            point_x = 239
-            point_y = 0
-            point1_x = 239
-            point1_y = 359
+            print("No line detected!") 
+            point_y = 280
+            row = img_gray[:,point_y]
+            index = sorted(np.where(row == row.max())[0])
+            print(index)
+            point_x = (index[0] +  index[len(index)-1])/2     
+            point1_y = 330
+            row1 = img_gray[:,point1_y]
+            index1 = sorted(np.where(row1 ==row1.max())[0])
+            print(index1)
+            row1_shape = len(index1)
+            point1_x = (index1[0] +  index1[row1_shape-1])/2
             cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),1) 
 
     #cv2.line(img_open,(point_x,point_y),(point1_x,point1_y)(0,255,255),1)  
@@ -651,7 +696,7 @@ def update_output_control(target,Rotation_Matrix,current_position_w,current_orie
     #print(distance_update)
     theta_update = np.arctan(float(target_node_ccurrent[1])/(target_node_ccurrent[0]+0.000001))    
     p1 = 0.03##para
-    p2 = 0.05
+    p2 = 0.04
     v_reference_update = p1*distance_update
     w_reference_update = p2*theta_update
     v_x = v_reference_update * np.cos(theta_update)

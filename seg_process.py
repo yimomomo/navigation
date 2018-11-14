@@ -68,15 +68,18 @@ def odometry_callback(Odometry_sub):
     img_resize_copy = img_resize.copy()
     img_resize_copy2 = np.zeros(img_resize.shape)
     img_resize_copy2 = img_resize.copy()
-
+    img_resize_copy3 = np.zeros(img_resize.shape)
+    img_resize_copy3 = img_resize.copy()
+    img_resize_copy4 = np.zeros(img_resize.shape)
+    img_resize_copy4 = img_resize.copy()
 
     grid = navi.grid_transformation(img_resize_copy,transformation_matrix)
     img_resize_copy = np.zeros(img_resize.shape)
     img_resize_copy = img_resize.copy()
-    indices = navi.get_support_node(img_resize,grid,img_open)
+    indices = navi.get_support_node(img_resize_copy4,grid,img_open)
     reference_line = navi.find_road_boundary(img_resize_copy2)
     print(order_msg)
-    target_node_c = navi.find_target_node(img_resize,indices,reference_line,order_msg) 
+    target_node_c = navi.find_target_node(img_resize_copy3,indices,reference_line,order_msg) 
     reference_position = [Odometry_sub.pose.pose.position.x,Odometry_sub.pose.pose.position.y,Odometry_sub.pose.pose.position.z]
     #reference_position = [Odometry_sub.pose.position.x,Odometry_sub.pose.position.y,Odometry_sub.pose.position.z]
     reference_orientation = [Odometry_sub.pose.pose.orientation.x,Odometry_sub.pose.pose.orientation.y,Odometry_sub.pose.pose.orientation.z,Odometry_sub.pose.pose.orientation.w]

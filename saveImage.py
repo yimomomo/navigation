@@ -14,7 +14,7 @@ import numpy as np
 import time
 
 #DISPLAY_COLOR_SEG = 1
-#rospy.init_node('seg_trans', anonymous=True)
+rospy.init_node('save', anonymous=True)
 #segcli = zmq_comm_cli_c(name=name_semanticseg, ip=ip_semanticseg, port=port_semanticseg)
 #res_pub = rospy.Publisher('/seg_img', Image, queue_size=1)
 bridge = CvBridge()
@@ -30,7 +30,7 @@ def inputimg_cb(data):
     #end = time.time()
     num = i%50
     if( num == 0):
-        cv2.imwrite('/home/yimomomo/catkin_ws/src/navigation/image/%05d'%(i/50) +'.jpg',img)
+        cv2.imwrite('/home/zx/catkin_ws/src/navigation/image/%05d'%(i/50) +'.jpg',img)
     
     i = i+1
 

@@ -95,10 +95,10 @@ def find_boundary(img_open):
                 #cv2.line(img_open,(x1,y1),(x2,y2),(0,255,255),1)
                 k = (y2 - y1)/(x2 - x1+0.000001) 
                 b = y1*1.0 - x1*k*1.0
-                if(k<-1):
+                if(k<0):
                     lines_left.append([x1,y1,x2,y2,k,b])
                     #cv2.line(img_open,(x1,y1),(x2,y2),(255,0,0),1)
-                elif(k>0):
+                else:
                     lines_right.append([x1,y1,x2,y2,k,b])
                     #cv2.line(img_open,(x1,y1),(x2,y2),(0,255,0),1)
                 points.append([k,b])
@@ -106,12 +106,10 @@ def find_boundary(img_open):
         '''
         delete the line that are mis-detected
         '''
-        lines_left = sorted(lines_left,key=lambda x:x[4])
-        lines_right = sorted(lines_right,key=lambda x:x[4])
-        line_left = []
-        line_right = []
-        print(len(lines_left))
-        print(len(lines_right))
+        lines_left = sorted(lines_left)
+        lines_right = sorted(lines_right)
+        #lines_left = np.array(lines_left)
+        #for line in lines_left:
         if(len(lines_left) != 0):    
             line_left = lines_left[len(lines_left)/2]
             cv2.line(img_open,(line_left[0],line_left[1]),(line_left[2],line_left[3]),(255,255,0),1)
@@ -122,43 +120,38 @@ def find_boundary(img_open):
             cv2.line(img_open,(line_right[0],line_right[1]),(line_right[2],line_right[3]),(0,255,255),1)
         else:
             line_right = []
+
+        #line_left = np.array(line_left)
+        #line_right = np.array(line_right)
         print len(line_left)
         print len(line_right)
         if((len(line_left)!=0) and (len(line_right)!=0)):  
             print("both sides detected!")    
-            #line_left = lines_left[0]
-            #line_right = lines_right[0]
+            line_left = lines_left[0]
+            line_right = lines_right[0]
             point_x = int(-(line_left[5]-line_right[5])/(line_left[4]-line_right[4]))
-            point_y = int(line_left[4]*point_x + line_left[5])
-            point1_y = int(point_y + 50)#parameter
-            point1_x = int(((point1_y-line_left[5])/line_left[4]+(point1_y-line_right[5])/line_right[4])/2)
+            point_y = int(line_left[4]*point_x + line_left[4])
+            point1_x = 239
+            point1_y = 359
             cv2.circle(img_open,(int(point_x),int(point_y)),3,(0,0,255),3)
-            cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),2)  
+            cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),1)  
         elif(len(line_left)!=0 and len(line_right)==0): 
             point_x = line_left[0] + 100 ##parameter
             point_y = int(line_left[1] - 100*line_left[4]) ##parameter
             point1_x = line_left[2] + 100 ##parameter
-            point1_y = int(line_left[3] - 100*line_left[4]) ##parameter
+            point2_y = int(line_left[3] - 100*line_left[4]) ##parameter
             cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),1) 
         elif(len(lines_left)==0 and len(line_right)!=0):
             point_x = line_right[0] - 100 ##parameter
             point_y = int(line_right[1] + 100*line_right[4]) ##parameter
             point1_x = line_right[2] - 100 ##parameter
-            point1_y = int(line_right[3] + 100*line_right[4]) ##parameter
+            point2_y = int(line_right[3] + 100*line_right[4]) ##parameter
             cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),1) 
         else:
-            point_y = 210
-            row = img_gray[:,point_y]
-            index = sorted(np.where(row == 255)[0])
-            print(index)
-            row_shape = len(index)
-            point_x = (index[0] +  index[row_shape-1])/2     
-            point1_y = 310
-            row1 = img_gray[:,point1_y]
-            index1 = sorted(np.where(row1 == 255)[0])
-            print(index1)
-            row1_shape = len(index1)
-            point1_x = (index1[0] +  index1[row1_shape-1])/2
+            point_x = 239
+            point_y = 0
+            point1_x = 239
+            point1_y = 359
             cv2.line(img_open,(point_x,point_y),(point1_x,point1_y),(0,0,255),1) 
 
     #cv2.line(img_open,(point_x,point_y),(point1_x,point1_y)(0,255,255),1)  
